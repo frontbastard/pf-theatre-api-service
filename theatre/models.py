@@ -42,6 +42,9 @@ class Play(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ["-title"]
+
 
 class Performance(models.Model):
     play = models.ForeignKey(
@@ -63,6 +66,9 @@ class Performance(models.Model):
         self.full_clean()
         return super().save(*args, **kwargs)
 
+    class Meta:
+        ordering = ["-show_time"]
+
 
 class Reservation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -73,6 +79,9 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f"Reservation #{self.id} by {self.user}"
+
+    class Meta:
+        ordering = ["-created_at"]
 
 
 class Ticket(models.Model):
@@ -107,14 +116,6 @@ class Ticket(models.Model):
                     }
                 )
 
-    class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=["row", "seat", "performance"],
-                name="unique_ticket_row_seat_performance"
-            )
-        ]
-
     def __str__(self):
         return f"{self.performance} - (row: {self.row}, seat: {self.seat})"
 
@@ -129,3 +130,12 @@ class Ticket(models.Model):
     def save( self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ["-reservation__created_at"]
+        constraints = [
+            UniqueConstraint(
+                fields=["row", "seat", "performance"],
+                name="unique_ticket_row_seat_performance"
+            )
+        ]
