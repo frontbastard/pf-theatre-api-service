@@ -1,12 +1,24 @@
 from rest_framework import viewsets
 
-from theatre.models import TheatreHall, Performance, Play, Genre, Actor
+from theatre.models import (
+    TheatreHall,
+    Performance,
+    Play,
+    Genre,
+    Actor,
+    Reservation,
+)
 from theatre.serializers import (
     TheatreHallSerializer,
     PerformanceSerializer,
-    PerformanceListSerializer, PlaySerializer, PlayListSerializer,
-    GenreSerializer, ActorSerializer, PlayDetailSerializer,
-    PerformanceDetailSerializer
+    PerformanceListSerializer,
+    PlaySerializer,
+    PlayListSerializer,
+    GenreSerializer,
+    ActorSerializer,
+    PlayDetailSerializer,
+    PerformanceDetailSerializer,
+    ReservationSerializer
 )
 
 
@@ -62,3 +74,14 @@ class GenreViewSet(viewsets.ModelViewSet):
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+
+
+class ReservationViewSet(viewsets.ModelViewSet):
+    queryset = Reservation.objects.all()
+    serializer_class = ReservationSerializer
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

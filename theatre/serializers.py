@@ -1,7 +1,9 @@
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from theatre.models import TheatreHall, Performance, Play, Actor, Genre
+from theatre.models import TheatreHall, Performance, Play, Actor, Genre, \
+    Reservation, Ticket
 
 
 class TheatreHallSerializer(serializers.ModelSerializer):
@@ -75,3 +77,35 @@ class PerformanceListSerializer(serializers.ModelSerializer):
 class PerformanceDetailSerializer(PerformanceSerializer):
     theatre_hall = TheatreHallSerializer(many=False, read_only=True)
     play = PlayDetailSerializer(many=False, read_only=True)
+
+
+class TicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        exclude = ("reservation",)
+
+    def validate(self, attrs):
+        return Ticket.validate_ticket(
+            attrs["row"],
+            attrs["seat"],
+            attrs["performance"].theatre_hall,
+            serializers.ValidationError
+        )
+
+
+class ReservationSerializer(serializers.ModelSerializer):
+    tickets = TicketSerializer(many=True, read_only=False, allow_empty=False)
+
+    class Meta:
+        model = Reservation
+        fields = ("id", "created_at", "tickets")
+
+    def create(self, validated_data):
+        with transaction.atomic():
+            tickets = validated_data.pop("tickets")
+            reservation = Reservation.objects.create(**validated_data)
+
+            for ticket in tickets:
+                Ticket.objects.create(reservation=reservation, **ticket)
+
+            return reservation
