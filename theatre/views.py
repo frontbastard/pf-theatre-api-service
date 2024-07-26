@@ -1,3 +1,4 @@
+from django.db.models import Count, F
 from rest_framework import viewsets
 
 from theatre.models import (
@@ -18,7 +19,7 @@ from theatre.serializers import (
     ActorSerializer,
     PlayDetailSerializer,
     PerformanceDetailSerializer,
-    ReservationSerializer
+    ReservationSerializer, ReservationListSerializer
 )
 
 
@@ -29,26 +30,55 @@ class TheatreHallViewSet(viewsets.ModelViewSet):
 
 class PerformanceViewSet(viewsets.ModelViewSet):
     queryset = Performance.objects.all()
+    serializer_class = PerformanceSerializer
 
     def get_serializer_class(self):
+        serializer = self.serializer_class
+
         if self.action == "list":
-            return PerformanceListSerializer
+            serializer = PerformanceListSerializer
 
         if self.action == "retrieve":
-            return PerformanceDetailSerializer
+            serializer = PerformanceDetailSerializer
 
-        return PerformanceSerializer
+        return serializer
 
     def get_queryset(self):
-        if self.action in ("list", "detail"):
-            return self.queryset.select_related()
+        queryset = self.queryset
 
-        return self.queryset
+        if self.action == "list":
+            queryset = (
+                queryset
+                .select_related()
+                .annotate(
+                    tickets_available=(
+                        F(
+                            "theatre_hall__rows"
+                        ) * F(
+                            "theatre_hall__seats_in_row"
+                        ) - Count(
+                            "tickets"
+                        )
+                    )
+                )
+            )
+
+        if self.action == "retrieve":
+            queryset = queryset.select_related()
+
+        return queryset
 
 
 class PlayViewSet(viewsets.ModelViewSet):
     queryset = Play.objects.all()
     serializer_class = PlaySerializer
+
+    @staticmethod
+    def _params_to_ints(query_string):
+        """
+        Converts a string of format '1,3,4' to a list of integers [1,2,3].
+        """
+        return [int(str_id) for str_id in query_string.split(",")]
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -60,10 +90,21 @@ class PlayViewSet(viewsets.ModelViewSet):
         return PlaySerializer
 
     def get_queryset(self):
-        if self.action in ("list", "retrieve"):
-            return self.queryset.prefetch_related("genres", "actors")
+        queryset = self.queryset
+        title = self.request.query_params.get("title")
+        genres = self.request.query_params.get("genres")
 
-        return self.queryset
+        if genres:
+            genres = self._params_to_ints(genres)
+            queryset = queryset.filter(genres__id__in=genres)
+
+        if title:
+            queryset = self.queryset.filter(title__icontains=title)
+
+        if self.action in ("list", "retrieve"):
+            queryset = queryset.prefetch_related("genres", "actors")
+
+        return queryset.distinct()
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -80,8 +121,24 @@ class ReservationViewSet(viewsets.ModelViewSet):
     queryset = Reservation.objects.all()
     serializer_class = ReservationSerializer
 
+    def get_serializer_class(self):
+        serializer = self.serializer_class
+
+        if self.action == "list":
+            return ReservationListSerializer
+
+        return serializer
+
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        queryset = self.queryset.filter(user=self.request.user)
+
+        if self.action == "list":
+            queryset = queryset.prefetch_related(
+                "tickets__performance__play",
+                "tickets__performance__theatre_hall",
+            )
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

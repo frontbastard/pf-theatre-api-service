@@ -10,6 +10,10 @@ class TheatreHall(models.Model):
     rows = models.PositiveIntegerField()
     seats_in_row = models.PositiveIntegerField()
 
+    @property
+    def capacity(self) -> int:
+        return self.rows * self.seats_in_row
+
     def __str__(self):
         return f"Hall #{self.id}: {self.name}"
 
@@ -43,7 +47,7 @@ class Play(models.Model):
         return self.title
 
     class Meta:
-        ordering = ["-title"]
+        ordering = ("-title",)
 
 
 class Performance(models.Model):
@@ -67,7 +71,7 @@ class Performance(models.Model):
         return super().save(*args, **kwargs)
 
     class Meta:
-        ordering = ["-show_time"]
+        ordering = ("-show_time",)
 
 
 class Reservation(models.Model):
@@ -81,7 +85,7 @@ class Reservation(models.Model):
         return f"Reservation #{self.id} by {self.user}"
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ("-created_at",)
 
 
 class Ticket(models.Model):
@@ -132,7 +136,7 @@ class Ticket(models.Model):
         return super().save(*args, **kwargs)
 
     class Meta:
-        ordering = ["-reservation__created_at"]
+        ordering = ("row", "seat")
         constraints = [
             UniqueConstraint(
                 fields=["row", "seat", "performance"],

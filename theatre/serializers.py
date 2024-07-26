@@ -34,49 +34,18 @@ class PlayListSerializer(PlaySerializer):
     actors = SlugRelatedField(
         many=True,
         read_only=True,
-        slug_field="full_name"
+        slug_field="full_name",
     )
     genres = SlugRelatedField(
         many=True,
         read_only=True,
-        slug_field="name"
+        slug_field="name",
     )
 
 
 class PlayDetailSerializer(PlaySerializer):
     actors = ActorSerializer(many=True)
     genres = GenreSerializer(many=True)
-
-
-class PerformanceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Performance
-        fields = "__all__"
-
-
-class PerformanceListSerializer(serializers.ModelSerializer):
-    theatre_hall_name = serializers.CharField(
-        source="theatre_hall.name",
-        read_only=True
-    )
-    play_title = serializers.CharField(
-        source="play.title",
-        read_only=True
-    )
-
-    class Meta:
-        model = Performance
-        fields = (
-            "id",
-            "show_time",
-            "play_title",
-            "theatre_hall_name",
-        )
-
-
-class PerformanceDetailSerializer(PerformanceSerializer):
-    theatre_hall = TheatreHallSerializer(many=False, read_only=True)
-    play = PlayDetailSerializer(many=False, read_only=True)
 
 
 class TicketSerializer(serializers.ModelSerializer):
@@ -91,6 +60,50 @@ class TicketSerializer(serializers.ModelSerializer):
             attrs["performance"].theatre_hall,
             serializers.ValidationError
         )
+
+
+class PerformanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Performance
+        fields = "__all__"
+
+
+class PerformanceListSerializer(serializers.ModelSerializer):
+    theatre_hall_name = serializers.CharField(
+        source="theatre_hall.name",
+        read_only=True,
+    )
+    theatre_hall_seats = serializers.IntegerField(
+        source="theatre_hall.capacity",
+        read_only=True,
+    )
+    play_title = serializers.CharField(
+        source="play.title",
+        read_only=True,
+    )
+    tickets_available = serializers.IntegerField(read_only=True)
+
+
+    class Meta:
+        model = Performance
+        fields = (
+            "id",
+            "show_time",
+            "play_title",
+            "theatre_hall_name",
+            "tickets_available",
+            "theatre_hall_seats",
+        )
+
+
+class PerformanceDetailSerializer(PerformanceSerializer):
+    theatre_hall = TheatreHallSerializer(many=False, read_only=True)
+    play = PlayDetailSerializer(many=False, read_only=True)
+    taken_seats = serializers.SerializerMethodField()
+
+    def get_taken_seats(self, obj):
+        tickets = obj.tickets.all()
+        return [{"row": ticket.row, "seat": ticket.seat} for ticket in tickets]
 
 
 class ReservationSerializer(serializers.ModelSerializer):
@@ -109,3 +122,11 @@ class ReservationSerializer(serializers.ModelSerializer):
                 Ticket.objects.create(reservation=reservation, **ticket)
 
             return reservation
+
+
+class TicketListSerializer(TicketSerializer):
+    performance = PerformanceListSerializer(read_only=True)
+
+
+class ReservationListSerializer(ReservationSerializer):
+    tickets = TicketListSerializer(many=True, read_only=True)
