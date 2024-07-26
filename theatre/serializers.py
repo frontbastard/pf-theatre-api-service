@@ -48,20 +48,6 @@ class PlayDetailSerializer(PlaySerializer):
     genres = GenreSerializer(many=True)
 
 
-class TicketSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ticket
-        exclude = ("reservation",)
-
-    def validate(self, attrs):
-        return Ticket.validate_ticket(
-            attrs["row"],
-            attrs["seat"],
-            attrs["performance"].theatre_hall,
-            serializers.ValidationError
-        )
-
-
 class PerformanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Performance
@@ -106,6 +92,25 @@ class PerformanceDetailSerializer(PerformanceSerializer):
         return [{"row": ticket.row, "seat": ticket.seat} for ticket in tickets]
 
 
+class TicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        exclude = ("reservation",)
+
+    def validate(self, attrs):
+        Ticket.validate_ticket(
+            attrs["row"],
+            attrs["seat"],
+            attrs["performance"].theatre_hall,
+            serializers.ValidationError
+        )
+        return attrs
+
+
+class TicketListSerializer(TicketSerializer):
+    performance = PerformanceListSerializer(read_only=True)
+
+
 class ReservationSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(many=True, read_only=False, allow_empty=False)
 
@@ -122,10 +127,6 @@ class ReservationSerializer(serializers.ModelSerializer):
                 Ticket.objects.create(reservation=reservation, **ticket)
 
             return reservation
-
-
-class TicketListSerializer(TicketSerializer):
-    performance = PerformanceListSerializer(read_only=True)
 
 
 class ReservationListSerializer(ReservationSerializer):
