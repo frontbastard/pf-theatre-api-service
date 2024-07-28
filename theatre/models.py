@@ -1,8 +1,22 @@
+import pathlib
+import uuid
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.utils import timezone
+from django.utils.text import slugify
+
+
+def create_image_path(instance, filename: str) -> pathlib.Path:
+    filename = (f"{slugify(instance.title)}-{uuid.uuid4()}"
+                f"{pathlib.Path(filename).suffix}")
+    return pathlib.Path(
+        "uploads",
+        slugify(instance.__class__.__name__),
+        pathlib.Path(filename)
+    )
 
 
 class TheatreHall(models.Model):
@@ -42,6 +56,11 @@ class Play(models.Model):
     description = models.TextField(null=True, blank=True)
     actors = models.ManyToManyField(Actor, blank=True, related_name="plays")
     genres = models.ManyToManyField(Genre, blank=True, related_name="plays")
+    image = models.ImageField(
+        null=True,
+        blank=True,
+        upload_to=create_image_path
+    )
 
     def __str__(self):
         return self.title
