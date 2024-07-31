@@ -10,8 +10,10 @@ from django.utils.text import slugify
 
 
 def create_image_path(instance, filename: str) -> pathlib.Path:
-    filename = (f"{slugify(instance.title)}-{uuid.uuid4()}"
-                f"{pathlib.Path(filename).suffix}")
+    filename = (
+        f"{slugify(instance.title)}-{uuid.uuid4()}"
+        f"{pathlib.Path(filename).suffix}"
+    )
     return pathlib.Path(
         "uploads",
         slugify(instance.__class__.__name__),
@@ -85,7 +87,7 @@ class Performance(models.Model):
         if self.show_time < timezone.now():
             raise ValidationError("Show time cannot be in the past.")
 
-    def save( self, *args, **kwargs):
+    def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
 
@@ -132,10 +134,11 @@ class Ticket(models.Model):
             if not (1 <= ticket_attr_value <= count_attrs):
                 raise error_to_raise(
                     {
-                        ticket_attr_name: f"{ticket_attr_name} "
-                        f"number must be in available range: "
-                        f"(1, {theatre_hall_attr_name}): "
-                        f"(1, {count_attrs})"
+                        ticket_attr_name:
+                            f"{ticket_attr_name} "
+                            f"number must be in available range: "
+                            f"(1, {theatre_hall_attr_name}): "
+                            f"(1, {count_attrs})"
                     }
                 )
 
@@ -150,7 +153,7 @@ class Ticket(models.Model):
             ValidationError,
         )
 
-    def save( self, *args, **kwargs):
+    def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
 
