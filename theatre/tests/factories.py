@@ -3,7 +3,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 
-from theatre.models import Reservation, Play, Actor, Genre, TheatreHall
+from theatre.models import (
+    Reservation,
+    Play,
+    Actor,
+    Genre,
+    TheatreHall,
+    Performance,
+)
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -83,3 +90,14 @@ class PlayFactory(factory.django.DjangoModelFactory):
         if extracted:
             for genre in extracted:
                 self.genres.add(genre)
+
+
+class PerformanceFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Performance
+
+    play = factory.SubFactory(PlayFactory)
+    theatre_hall = factory.SubFactory(TheatreHallFactory)
+    show_time = factory.LazyFunction(
+        lambda: timezone.now() + timezone.timedelta(days=1)
+    )
