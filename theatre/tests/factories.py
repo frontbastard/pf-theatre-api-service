@@ -65,7 +65,6 @@ class PlayFactory(factory.django.DjangoModelFactory):
 
     title = factory.Faker("sentence")
     description = factory.Faker("paragraph")
-    image = factory.Faker("image_url")
 
     @factory.post_generation
     def actors(self, create, extracted, **kwargs):

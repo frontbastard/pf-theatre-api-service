@@ -8,6 +8,10 @@ from theatre.serializers import ActorSerializer
 from theatre.tests.factories import UserFactory, ActorFactory
 
 ACTOR_URL = reverse("theatre:actor-list")
+PAYLOAD = {
+    "first_name": "Test first_name",
+    "last_name": "Test last_name",
+}
 
 
 class UnauthorizedActorTest(TestCase):
@@ -24,10 +28,6 @@ class AuthorizedActorTest(TestCase):
         self.client = APIClient()
         self.user = UserFactory()
         self.client.force_authenticate(self.user)
-        self.actor_data = {
-            "first_name": "Test first_name",
-            "last_name": "Test last_name",
-        }
 
     def test_actors_list(self):
         ActorFactory()
@@ -40,13 +40,24 @@ class AuthorizedActorTest(TestCase):
         self.assertEqual(len(res.data["results"]), len(serializer.data))
 
     def test_not_admin_can_not_create_actor(self):
-        res = self.client.post(ACTOR_URL, self.actor_data)
+        res = self.client.post(ACTOR_URL, PAYLOAD)
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Actor.objects.count(), 0)
 
-    def test_admin_can_create_actor(self):
-        admin_user = UserFactory(is_staff=True)
-        self.client.force_authenticate(admin_user)
-        res = self.client.post(ACTOR_URL, self.actor_data)
+
+class AdminActorTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = UserFactory(is_staff=True)
+        self.client.force_authenticate(self.user)
+
+    def test_admin_can_create_play(self):
+        res = self.client.post(ACTOR_URL, PAYLOAD)
+
+        play = Actor.objects.get(pk=res.data["id"])
+
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Actor.objects.count(), 1)
+
+        for key in PAYLOAD:
+            self.assertEqual(PAYLOAD[key], getattr(play, key))
