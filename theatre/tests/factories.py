@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 
-from theatre.models import Reservation, Play, Actor, Genre
+from theatre.models import Reservation, Play, Actor, Genre, TheatreHall
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -25,6 +25,15 @@ class UserFactory(factory.django.DjangoModelFactory):
     def _create(cls, model_class, *args, **kwargs):
         manager = cls._get_manager(model_class)
         return manager.create_user(*args, **kwargs)
+
+
+class TheatreHallFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = TheatreHall
+
+    name = factory.Faker("sentence")
+    rows = factory.Faker("pyint", min_value=5, max_value=30)
+    seats_in_row = factory.Faker("pyint", min_value=10, max_value=50)
 
 
 class ReservationFactory(factory.django.DjangoModelFactory):
