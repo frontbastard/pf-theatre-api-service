@@ -36,7 +36,8 @@ services:
       - ./:/app
     command: >
       sh -c "python manage.py wait_for_db &&
-            python manage.py test"
+             psql -U theatre -h db -c 'DROP DATABASE IF EXISTS test_theatre;' &&
+             python manage.py test"
     depends_on:
       - db
 
