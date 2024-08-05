@@ -8,7 +8,8 @@ from rest_framework.test import APIClient
 
 from theatre.models import Play
 from theatre.serializers import (
-    PlaySerializer, PlayListSerializer,
+    PlaySerializer,
+    PlayListSerializer,
     PlayDetailSerializer,
 )
 from theatre.tests.factories import (

@@ -2,7 +2,7 @@ from django.contrib.auth.models import (
     AbstractUser,
     UserManager as DjangoUserManager
 )
-from django.db import models
+from django.db import models, transaction
 from django.utils.translation import gettext as _
 
 
