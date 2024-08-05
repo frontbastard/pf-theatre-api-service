@@ -7,11 +7,13 @@ from django.db import models
 from django.db.models import UniqueConstraint
 from django.utils import timezone
 from django.utils.text import slugify
+from unidecode import unidecode
 
 
 def create_image_path(instance, filename: str) -> pathlib.Path:
+    transliterated_title = unidecode(instance.title)
     filename = (
-        f"{slugify(instance.title)}-{uuid.uuid4()}"
+        f"{slugify(transliterated_title)}-{uuid.uuid4()}"
         f"{pathlib.Path(filename).suffix}"
     )
     return pathlib.Path(
