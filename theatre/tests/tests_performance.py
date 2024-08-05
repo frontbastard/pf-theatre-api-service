@@ -28,7 +28,7 @@ def create_payload():
     return {
         "play": play.id,
         "theatre_hall": theatre_hall.id,
-        "show_time": timezone.now() + timezone.timedelta(days=1)
+        "show_time": timezone.now() + timezone.timedelta(days=1),
     }
 
 
@@ -104,7 +104,5 @@ class AdminPerformanceTest(TestCase):
         self.assertEqual(payload["play"], performance.play.id)
         self.assertEqual(payload["theatre_hall"], performance.theatre_hall.id)
         self.assertAlmostEqual(
-            payload["show_time"],
-            performance.show_time,
-            delta=timedelta(seconds=1)
+            payload["show_time"], performance.show_time, delta=timedelta(seconds=1)
         )

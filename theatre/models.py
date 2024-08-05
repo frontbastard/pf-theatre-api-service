@@ -17,9 +17,7 @@ def create_image_path(instance, filename: str) -> pathlib.Path:
         f"{pathlib.Path(filename).suffix}"
     )
     return pathlib.Path(
-        "uploads",
-        slugify(instance.__class__.__name__),
-        pathlib.Path(filename)
+        "uploads", slugify(instance.__class__.__name__), pathlib.Path(filename)
     )
 
 
@@ -75,9 +73,7 @@ class Play(models.Model):
 
 class Performance(models.Model):
     play = models.ForeignKey(
-        Play,
-        on_delete=models.CASCADE,
-        related_name="performances"
+        Play, on_delete=models.CASCADE, related_name="performances"
     )
     theatre_hall = models.ForeignKey(TheatreHall, on_delete=models.CASCADE)
     show_time = models.DateTimeField(db_index=True)
@@ -115,32 +111,27 @@ class Ticket(models.Model):
     row = models.PositiveIntegerField()
     seat = models.PositiveIntegerField()
     performance = models.ForeignKey(
-        Performance,
-        on_delete=models.CASCADE,
-        related_name="tickets"
+        Performance, on_delete=models.CASCADE, related_name="tickets"
     )
     reservation = models.ForeignKey(
-        Reservation,
-        on_delete=models.CASCADE,
-        related_name="tickets"
+        Reservation, on_delete=models.CASCADE, related_name="tickets"
     )
 
     @staticmethod
     def validate_ticket(row, seat, theatre_hall, error_to_raise):
         for ticket_attr_value, ticket_attr_name, theatre_hall_attr_name in [
             (row, "row", "rows"),
-            (seat, "seat", "seats_in_row")
+            (seat, "seat", "seats_in_row"),
         ]:
             count_attrs = getattr(theatre_hall, theatre_hall_attr_name)
 
             if not (1 <= ticket_attr_value <= count_attrs):
                 raise error_to_raise(
                     {
-                        ticket_attr_name:
-                            f"{ticket_attr_name} "
-                            f"number must be in available range: "
-                            f"(1, {theatre_hall_attr_name}): "
-                            f"(1, {count_attrs})"
+                        ticket_attr_name: f"{ticket_attr_name} "
+                        f"number must be in available range: "
+                        f"(1, {theatre_hall_attr_name}): "
+                        f"(1, {count_attrs})"
                     }
                 )
 
@@ -164,6 +155,6 @@ class Ticket(models.Model):
         constraints = [
             UniqueConstraint(
                 fields=["row", "seat", "performance"],
-                name="unique_ticket_row_seat_performance"
+                name="unique_ticket_row_seat_performance",
             )
         ]

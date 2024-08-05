@@ -24,7 +24,7 @@ PLAY_URL = reverse("theatre:play-list")
 
 def create_test_image():
     file_content = BytesIO(
-        b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
     )
 
     return SimpleUploadedFile(
@@ -64,25 +64,15 @@ class UnauthorizedPlayTest(TestCase):
         play_with_genre_2 = PlayFactory(genres=[genre_2])
         play_without_genres = PlayFactory(genres=[])
 
-        res = self.client.get(
-            PLAY_URL, {
-                "genres":
-                    f"{genre_1.id},"
-                    f"{genre_2.id}"
-            }
-        )
+        res = self.client.get(PLAY_URL, {"genres": f"{genre_1.id}," f"{genre_2.id}"})
 
         serializer_play_genre_1 = PlayListSerializer(play_with_genre_1)
         serializer_play_genre_2 = PlayListSerializer(play_with_genre_2)
-        serializer_play_without_genres = PlayListSerializer(
-            play_without_genres
-        )
+        serializer_play_without_genres = PlayListSerializer(play_without_genres)
 
         self.assertIn(serializer_play_genre_1.data, res.data["results"])
         self.assertIn(serializer_play_genre_2.data, res.data["results"])
-        self.assertNotIn(
-            serializer_play_without_genres.data, res.data["results"]
-        )
+        self.assertNotIn(serializer_play_without_genres.data, res.data["results"])
 
     def test_filter_plays_by_title(self):
         play_title_1 = PlayFactory(title="Test_1 Title")
@@ -166,8 +156,7 @@ class AdminPlayTest(TestCase):
                 self.assertTrue(getattr(play, key).name.endswith(".png"))
             elif key in ["genres", "actors"]:
                 self.assertEqual(
-                    set(value),
-                    set(getattr(play, key).values_list("id", flat=True))
+                    set(value), set(getattr(play, key).values_list("id", flat=True))
                 )
             else:
                 self.assertEqual(value, getattr(play, key))

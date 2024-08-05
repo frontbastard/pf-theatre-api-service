@@ -5,13 +5,13 @@ from django.db.utils import IntegrityError
 
 
 class Command(BaseCommand):
-    help = "Create a superuser if none exist"
+    help = "Create a superuser if none exist"  # noqa: VNE003
 
     def handle(self, *args, **options):
-        User = get_user_model()
-        if not User.objects.filter(is_superuser=True).exists():
+        user = get_user_model()
+        if not user.objects.filter(is_superuser=True).exists():
             try:
-                User.objects.create_superuser(
+                user.objects.create_superuser(
                     email=config("SUPERUSER_EMAIL"),
                     password=config("SUPERUSER_PASSWORD"),
                 )

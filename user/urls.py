@@ -3,7 +3,8 @@ from datetime import timedelta
 from django.urls import path
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
-    TokenRefreshView, TokenVerifyView,
+    TokenRefreshView,
+    TokenVerifyView,
 )
 
 from user.views import CreateUserView, ManageUserView

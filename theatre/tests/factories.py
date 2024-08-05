@@ -20,11 +20,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Faker("email")
     password = factory.LazyFunction(
         lambda: make_password(
-            factory.Faker("password").evaluate(
-                None,
-                None,
-                {"locale": None}
-            )
+            factory.Faker("password").evaluate(None, None, {"locale": None})
         )
     )
 

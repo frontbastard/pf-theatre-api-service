@@ -41,6 +41,7 @@ class AuthorizedGenreTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Genre.objects.count(), 0)
 
+
 class AdminGenreTest(TestCase):
     def setUp(self):
         self.client = APIClient()

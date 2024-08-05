@@ -45,6 +45,7 @@ class AuthorizedTheatreHallTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(TheatreHall.objects.count(), 0)
 
+
 class AdminTheatreHallTest(TestCase):
     def setUp(self):
         self.client = APIClient()

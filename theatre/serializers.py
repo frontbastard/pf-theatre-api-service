@@ -2,8 +2,15 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from theatre.models import TheatreHall, Performance, Play, Actor, Genre, \
-    Reservation, Ticket
+from theatre.models import (
+    TheatreHall,
+    Performance,
+    Play,
+    Actor,
+    Genre,
+    Reservation,
+    Ticket,
+)
 
 
 class TheatreHallSerializer(serializers.ModelSerializer):
@@ -69,7 +76,6 @@ class PerformanceListSerializer(serializers.ModelSerializer):
     )
     tickets_available = serializers.IntegerField(read_only=True)
 
-
     class Meta:
         model = Performance
         fields = (
@@ -102,7 +108,7 @@ class TicketSerializer(serializers.ModelSerializer):
             attrs["row"],
             attrs["seat"],
             attrs["performance"].theatre_hall,
-            serializers.ValidationError
+            serializers.ValidationError,
         )
         return attrs
 

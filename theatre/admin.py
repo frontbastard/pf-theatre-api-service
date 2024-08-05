@@ -7,7 +7,7 @@ from theatre.models import (
     Reservation,
     Genre,
     Actor,
-    Play
+    Play,
 )
 
 

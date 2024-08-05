@@ -1,4 +1,5 @@
-from .settings import *
+from .settings import *  # noqa: F403, F401
+from .settings import config
 
 DATABASES = {
     "default": {
