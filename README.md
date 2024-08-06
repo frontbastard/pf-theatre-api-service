@@ -51,6 +51,14 @@ https://www.docker.com/
 
 ---
 
+## Getting access
+- Create user via http://localhost:8001/api/v1/user/register/
+- Get access token via http://localhost:8001/api/v1/user/token
+- Superuser has been already created with the credentials described in the `.env` file
+- Theatre API is here http://localhost:8001/api/v1/theatre/
+
+---
+
 ## Swagger
 After launching the project, swagger will be available at http://localhost:8001/api/v1/doc/swagger/
 
