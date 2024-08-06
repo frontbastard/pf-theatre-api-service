@@ -1,14 +1,34 @@
+import pathlib
+import uuid
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.utils import timezone
+from django.utils.text import slugify
+from unidecode import unidecode
+
+
+def create_image_path(instance, filename: str) -> pathlib.Path:
+    transliterated_title = unidecode(instance.title)
+    filename = (
+        f"{slugify(transliterated_title)}-{uuid.uuid4()}"
+        f"{pathlib.Path(filename).suffix}"
+    )
+    return pathlib.Path(
+        "uploads", slugify(instance.__class__.__name__), pathlib.Path(filename)
+    )
 
 
 class TheatreHall(models.Model):
     name = models.CharField(max_length=255)
     rows = models.PositiveIntegerField()
     seats_in_row = models.PositiveIntegerField()
+
+    @property
+    def capacity(self) -> int:
+        return self.rows * self.seats_in_row
 
     def __str__(self):
         return f"Hall #{self.id}: {self.name}"
@@ -38,16 +58,22 @@ class Play(models.Model):
     description = models.TextField(null=True, blank=True)
     actors = models.ManyToManyField(Actor, blank=True, related_name="plays")
     genres = models.ManyToManyField(Genre, blank=True, related_name="plays")
+    image = models.ImageField(
+        null=True,
+        blank=True,
+        upload_to=create_image_path
+    )
 
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ("-title",)
+
 
 class Performance(models.Model):
     play = models.ForeignKey(
-        Play,
-        on_delete=models.CASCADE,
-        related_name="performances"
+        Play, on_delete=models.CASCADE, related_name="performances"
     )
     theatre_hall = models.ForeignKey(TheatreHall, on_delete=models.CASCADE)
     show_time = models.DateTimeField(db_index=True)
@@ -59,9 +85,12 @@ class Performance(models.Model):
         if self.show_time < timezone.now():
             raise ValidationError("Show time cannot be in the past.")
 
-    def save( self, *args, **kwargs):
+    def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ("-show_time",)
 
 
 class Reservation(models.Model):
@@ -74,26 +103,25 @@ class Reservation(models.Model):
     def __str__(self):
         return f"Reservation #{self.id} by {self.user}"
 
+    class Meta:
+        ordering = ("-created_at",)
+
 
 class Ticket(models.Model):
     row = models.PositiveIntegerField()
     seat = models.PositiveIntegerField()
     performance = models.ForeignKey(
-        Performance,
-        on_delete=models.CASCADE,
-        related_name="tickets"
+        Performance, on_delete=models.CASCADE, related_name="tickets"
     )
     reservation = models.ForeignKey(
-        Reservation,
-        on_delete=models.CASCADE,
-        related_name="tickets"
+        Reservation, on_delete=models.CASCADE, related_name="tickets"
     )
 
     @staticmethod
     def validate_ticket(row, seat, theatre_hall, error_to_raise):
         for ticket_attr_value, ticket_attr_name, theatre_hall_attr_name in [
             (row, "row", "rows"),
-            (seat, "seat", "seats_in_row")
+            (seat, "seat", "seats_in_row"),
         ]:
             count_attrs = getattr(theatre_hall, theatre_hall_attr_name)
 
@@ -107,14 +135,6 @@ class Ticket(models.Model):
                     }
                 )
 
-    class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=["row", "seat", "performance"],
-                name="unique_ticket_row_seat_performance"
-            )
-        ]
-
     def __str__(self):
         return f"{self.performance} - (row: {self.row}, seat: {self.seat})"
 
@@ -126,6 +146,15 @@ class Ticket(models.Model):
             ValidationError,
         )
 
-    def save( self, *args, **kwargs):
+    def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ("row", "seat")
+        constraints = [
+            UniqueConstraint(
+                fields=["row", "seat", "performance"],
+                name="unique_ticket_row_seat_performance",
+            )
+        ]
