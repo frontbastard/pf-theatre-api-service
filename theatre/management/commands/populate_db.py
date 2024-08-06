@@ -50,7 +50,7 @@ class Command(BaseCommand):
     def create_users(self):
         for _ in range(10):
             get_user_model().objects.create_user(
-                email=fake.email(),
+                email=fake.unique.email(),
                 password=config("FAKER_USER_PASSWORD")
             )
 
